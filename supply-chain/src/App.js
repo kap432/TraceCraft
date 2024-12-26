@@ -20,7 +20,6 @@ import CourierDashboard from "./components/CourierDashboard";
 import { auth, db } from "./firebase"; // Assuming firebase is configured
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import CertificateAuthorityDashboard from "./components/CertificateAuthorityDashboard";
 import CertificateAuthority from "./components/CertificateAuthority";
 
 
@@ -419,7 +418,7 @@ const [step, setStep] = useState(1); // Track the current step in the flow
       constant: true,
     },
   ];
-  const contractAddress = "0xBf0069E3b030a62345eCe6148E217dFd896F1eC2";
+  const contractAddress = "0x5518F881c4a20D86Ec92CD46e22a5e35621fB1d9";
 
   const connectToMetaMask = async () => {
     if (window.ethereum) {
@@ -462,9 +461,6 @@ const [step, setStep] = useState(1); // Track the current step in the flow
   return (
     <Router>
       <div className="App">
-        <h1>Blockchain Product Storage</h1>
-        <h2>Manufacturer Account: {manufacturerAccount}</h2>
-        <h2>Courier Account: {courierAccount}</h2>
   
         <Routes>
           {/* Step 1: Sign Up */}

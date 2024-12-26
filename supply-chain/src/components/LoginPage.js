@@ -8,12 +8,7 @@ import {
   Typography,
   TextField,
   Button,
-  FormControl,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Box,
-  Grid,
   Alert,
 } from "@mui/material";
 
@@ -21,7 +16,6 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [walletAddresses, setWalletAddresses] = useState([]);
-  const [selectedWallet, setSelectedWallet] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -33,7 +27,6 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
           method: "eth_requestAccounts",
         });
         setWalletAddresses(accounts);
-        setSelectedWallet(accounts[0]);
       } catch (err) {
         setError("MetaMask connection failed. Please try again.");
       }
@@ -64,11 +57,19 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
       if (userDoc.exists()) {
         const userData = userDoc.data();
 
-        if (selectedWallet && selectedWallet !== userData.walletAddress) {
-          await updateWalletAddressInFirestore(user, selectedWallet);
-          setError("Wallet address updated successfully.");
+        // Automatically set wallet address based on role
+        let roleWalletMap = {
+          "Manufacturer": walletAddresses[0],
+          "Courier": walletAddresses[1],
+          "Certification Authority": walletAddresses[2],
+        };
+        const assignedWallet = roleWalletMap[userData.role];
+
+        if (assignedWallet && assignedWallet !== userData.walletAddress) {
+          await updateWalletAddressInFirestore(user, assignedWallet);
         }
 
+        // Navigate based on user role
         if (userData.role === "Manufacturer") {
           setIsAuthenticated(true);
           navigate("/manufacturer-dashboard");
@@ -139,36 +140,12 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
         >
           {walletAddresses.length > 0 ? "MetaMask Connected" : "Connect MetaMask"}
         </Button>
-        {walletAddresses.length > 0 && (
-          <FormControl component="fieldset">
-            <Typography variant="subtitle1">Select a Wallet:</Typography>
-            <RadioGroup
-              value={selectedWallet}
-              onChange={(e) => setSelectedWallet(e.target.value)}
-            >
-              {walletAddresses.map((wallet, index) => (
-                <FormControlLabel
-                  key={wallet}
-                  value={wallet}
-                  control={<Radio />}
-                  label={
-                    index === 0
-                      ? `Manufacturer: ${wallet}`
-                      : index === 1
-                      ? `Courier: ${wallet}`
-                      : `Certificate Authority: ${wallet}`
-                  }
-                />
-              ))}
-            </RadioGroup>
-          </FormControl>
-        )}
         <Button
           type="submit"
           variant="contained"
           color="primary"
           fullWidth
-          disabled={loading}
+          disabled={loading || walletAddresses.length === 0}
         >
           {loading ? "Logging In..." : "Login"}
         </Button>
@@ -178,16 +155,14 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
           {error}
         </Alert>
       )}
-      <Grid container justifyContent="center" sx={{ mt: 2 }}>
-        <Grid item>
-          <Typography variant="body2">
-            Don't have an account?{" "}
-            <Button color="secondary" onClick={() => navigate("/signup")}>
-              Sign Up
-            </Button>
-          </Typography>
-        </Grid>
-      </Grid>
+      <Box textAlign="center" sx={{ mt: 2 }}>
+        <Typography variant="body2">
+          Don't have an account?{" "}
+          <Button color="secondary" onClick={() => navigate("/signup")}>
+            Sign Up
+          </Button>
+        </Typography>
+      </Box>
     </Container>
   );
 };

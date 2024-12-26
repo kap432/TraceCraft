@@ -17,7 +17,7 @@ const CertificateAuthority = () => {
   const [web3, setWeb3] = useState(null); // Store web3 instance
 
     // Hardcoded Contract Address and ABI
-    const CONTRACT_ADDRESS = "0xBd3A728f5D49A9Bb1b9651f52e370056DE3b9c55"; // Replace with your contract address
+    const CONTRACT_ADDRESS = "0x5518F881c4a20D86Ec92CD46e22a5e35621fB1d9"; // Replace with your contract address
     const CONTRACT_ABI = [
       {
         anonymous: false,
