@@ -11,6 +11,7 @@ import {
   Snackbar,
   CircularProgress,
 } from "@mui/material";
+import { contractAddress, contractABI } from "../config/contractConfig"; // Adjust the import path as needed
 
 const AssignCourier = () => {
   const [productId, setProductId] = useState("");
@@ -19,400 +20,12 @@ const AssignCourier = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [deliveryStatus, setDeliveryStatus] = useState(""); // State to hold delivery status
+  const [deliveryStatus, setDeliveryStatus] = useState("");
   const scannerRef = useRef(null);
   const [scannerInstance, setScannerInstance] = useState(null);
 
-  // Initialize Web3, ABI, and Contract Address
-  const ABI = [
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: false,
-          internalType: "uint256",
-          name: "productId",
-          type: "uint256",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "name",
-          type: "string",
-        },
-        {
-          indexed: false,
-          internalType: "uint256",
-          name: "price",
-          type: "uint256",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "manufacturerName",
-          type: "string",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "manufacturerDetails",
-          type: "string",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "longitude",
-          type: "string",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "latitude",
-          type: "string",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "category",
-          type: "string",
-        },
-      ],
-      name: "ProductAdded",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: false,
-          internalType: "uint256",
-          name: "productId",
-          type: "uint256",
-        },
-        {
-          indexed: false,
-          internalType: "address",
-          name: "logisticsPartner",
-          type: "address",
-        },
-      ],
-      name: "ProductAssignedToCourier",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: false,
-          internalType: "uint256",
-          name: "productId",
-          type: "uint256",
-        },
-        {
-          indexed: false,
-          internalType: "address",
-          name: "customer",
-          type: "address",
-        },
-      ],
-      name: "ProductAssignedToCustomer",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: false,
-          internalType: "uint256",
-          name: "productId",
-          type: "uint256",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "certificateAuthority",
-          type: "string",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "certificateDocHash",
-          type: "string",
-        },
-      ],
-      name: "ProductCertified",
-      type: "event",
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: false,
-          internalType: "uint256",
-          name: "productId",
-          type: "uint256",
-        },
-        {
-          indexed: false,
-          internalType: "string",
-          name: "deliveryStatus",
-          type: "string",
-        },
-        {
-          indexed: false,
-          internalType: "address",
-          name: "logisticsPartner",
-          type: "address",
-        },
-      ],
-      name: "ProductDelivered",
-      type: "event",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "_id",
-          type: "uint256",
-        },
-        {
-          internalType: "string",
-          name: "_name",
-          type: "string",
-        },
-        {
-          internalType: "uint256",
-          name: "_price",
-          type: "uint256",
-        },
-        {
-          internalType: "string",
-          name: "_manufacturerName",
-          type: "string",
-        },
-        {
-          internalType: "string",
-          name: "_manufacturerDetails",
-          type: "string",
-        },
-        {
-          internalType: "string",
-          name: "_longitude",
-          type: "string",
-        },
-        {
-          internalType: "string",
-          name: "_latitude",
-          type: "string",
-        },
-        {
-          internalType: "string",
-          name: "_category",
-          type: "string",
-        },
-      ],
-      name: "addProduct",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "_productId",
-          type: "uint256",
-        },
-        {
-          internalType: "string",
-          name: "_certificateAuthority",
-          type: "string",
-        },
-        {
-          internalType: "string",
-          name: "_digitalSignature",
-          type: "string",
-        },
-        {
-          internalType: "string",
-          name: "_certificateDocHash",
-          type: "string",
-        },
-      ],
-      name: "certifyProduct",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "_productId",
-          type: "uint256",
-        },
-      ],
-      name: "assignCourier",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "_productId",
-          type: "uint256",
-        },
-        {
-          internalType: "string",
-          name: "_deliveryStatus",
-          type: "string",
-        },
-      ],
-      name: "markAsDelivered",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "_productId",
-          type: "uint256",
-        },
-        {
-          internalType: "address",
-          name: "_customer",
-          type: "address",
-        },
-      ],
-      name: "assignToCustomer",
-      outputs: [],
-      stateMutability: "nonpayable",
-      type: "function",
-    },
-    {
-      inputs: [
-        {
-          internalType: "uint256",
-          name: "_id",
-          type: "uint256",
-        },
-      ],
-      name: "getProduct",
-      outputs: [
-        {
-          components: [
-            {
-              internalType: "uint256",
-              name: "id",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "name",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "price",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "manufacturerName",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "manufacturerDetails",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "longitude",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "latitude",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              internalType: "address",
-              name: "manufacturer",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "logisticsPartner",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "customer",
-              type: "address",
-            },
-            {
-              internalType: "string",
-              name: "deliveryStatus",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "certificateAuthority",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "digitalSignature",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "certificateDocHash",
-              type: "string",
-            },
-            {
-              internalType: "bool",
-              name: "isCertified",
-              type: "bool",
-            },
-          ],
-          internalType: "struct ProductNewTrack.Product",
-          name: "",
-          type: "tuple",
-        },
-      ],
-      stateMutability: "view",
-      type: "function",
-      constant: true,
-    },
-    {
-      inputs: [],
-      name: "getAllProductIds",
-      outputs: [
-        {
-          internalType: "uint256[]",
-          name: "",
-          type: "uint256[]",
-        },
-      ],
-      stateMutability: "view",
-      type: "function",
-      constant: true,
-    },
-  ];
-  const CONTRACT_ADDRESS = "0x5518F881c4a20D86Ec92CD46e22a5e35621fB1d9"; // Replace with your deployed contract address
   const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
-  const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+  const contract = new web3.eth.Contract(contractABI, contractAddress);
 
   // Fetch user account
   const [account, setAccount] = useState("");
@@ -420,7 +33,7 @@ const AssignCourier = () => {
   useEffect(() => {
     const loadAccount = async () => {
       const accounts = await web3.eth.requestAccounts();
-      setAccount(accounts[1]);
+      setAccount(accounts[0]); // Using the first account
     };
     loadAccount();
   }, []);
@@ -440,12 +53,9 @@ const AssignCourier = () => {
     setLoading(true);
 
     try {
-      // Call the contract method to assign the courier
       await contract.methods.assignCourier(productId).send({ from: account });
       setError(false);
-      setMessage(
-        `Product ${productId} has been assigned to you as the courier.`
-      );
+      setMessage(`Product ${productId} has been assigned to you as the courier.`);
     } catch (err) {
       console.error(err);
       setError(true);
@@ -467,7 +77,6 @@ const AssignCourier = () => {
     setLoading(true);
 
     try {
-      console.log("Calling markAsDelivered with:", productId, deliveryStatus);
       await contract.methods
         .markAsDelivered(productId, deliveryStatus)
         .send({ from: account });
@@ -477,7 +86,7 @@ const AssignCourier = () => {
         `Product ${productId} has been marked as delivered with status: ${deliveryStatus}.`
       );
     } catch (err) {
-      console.error("Error calling markAsDelivered:", err);
+      console.error(err);
       setError(true);
       setMessage("Error marking product as delivered. Please try again.");
     } finally {
@@ -508,7 +117,6 @@ const AssignCourier = () => {
 
     newScannerInstance.render(
       (decodedText) => {
-        console.log("QR Code scanned: ", decodedText);
         setProductId(decodedText);
         newScannerInstance.clear();
         setScannerInstance(null);
@@ -578,7 +186,6 @@ const AssignCourier = () => {
           {isScanning ? "Stop Scanner" : "Scan QR Code"}
         </Button>
 
-        {/* Mark as Delivered Section */}
         <TextField
           label="Enter Delivery Status"
           variant="outlined"
