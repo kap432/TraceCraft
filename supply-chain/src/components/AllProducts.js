@@ -407,7 +407,7 @@ const AllProducts = () => {
       "constant": true
     }
   ];
-  const CONTRACT_ADDRESS = "0xBd3A728f5D49A9Bb1b9651f52e370056DE3b9c55";
+  const CONTRACT_ADDRESS = "0x5518F881c4a20D86Ec92CD46e22a5e35621fB1d9";
 
   const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
   const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
