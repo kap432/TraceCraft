@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract ProductNewTrack {
+contract ProductTrac {
     // Define a struct for the Product
     struct Product {
         uint256 id;
@@ -20,6 +20,14 @@ contract ProductNewTrack {
         string digitalSignature; // Digital signature of CA
         string certificateDocHash; // IPFS hash of the certificate document
         bool isCertified; // Certification status
+        Checkpoint[] checkpoints; // Array to store checkpoints
+    }
+
+    // Define a struct for the Checkpoints
+    struct Checkpoint {
+        string location;
+        uint256 checkInTime;
+        uint256 checkOutTime;
     }
 
     // Mapping to store products by their ID
@@ -62,55 +70,67 @@ contract ProductNewTrack {
         address customer
     );
 
+    event CheckpointAdded(
+        uint256 productId,
+        string location,
+        uint256 checkInTime,
+        uint256 checkOutTime
+    );
+
     // Function to add a product
     function addProduct(
-        uint256 _id,
-        string memory _name,
-        uint256 _price,
-        string memory _manufacturerName,
-        string memory _manufacturerDetails,
-        string memory _longitude,
-        string memory _latitude,
-        string memory _category
-    ) public {
-        // Ensure the product does not already exist
-        require(products[_id].id == 0, "Product with this ID already exists.");
+    uint256 _id,
+    string memory _name,
+    uint256 _price,
+    string memory _manufacturerName,
+    string memory _manufacturerDetails,
+    string memory _longitude,
+    string memory _latitude,
+    string memory _category
+) public {
+    // Ensure the product does not already exist
+    require(products[_id].id == 0, "Product with this ID already exists.");
 
-        // Add the product to the mapping
-        products[_id] = Product(
-            _id,
-            _name,
-            _price,
-            _manufacturerName,
-            _manufacturerDetails,
-            _longitude,
-            _latitude,
-            _category,
-            msg.sender, // Manufacturer is the creator of the product
-            address(0), // Initially, no logistics partner
-            address(0), // Initially, no customer
-            "", // Initially, no delivery status
-            "", // No certificate authority
-            "", // No digital signature
-            "", // No certificate document hash
-            false // Not certified initially
-        );
+    // Create the product
+    Product storage newProduct = products[_id];
+    newProduct.id = _id;
+    newProduct.name = _name;
+    newProduct.price = _price;
+    newProduct.manufacturerName = _manufacturerName;
+    newProduct.manufacturerDetails = _manufacturerDetails;
+    newProduct.longitude = _longitude;
+    newProduct.latitude = _latitude;
+    newProduct.category = _category;
+    newProduct.manufacturer = msg.sender;
+    newProduct.logisticsPartner = address(0);
+    newProduct.customer = address(0);
+    newProduct.deliveryStatus = "";
+    newProduct.certificateAuthority = "";
+    newProduct.digitalSignature = "";
+    newProduct.certificateDocHash = "";
+    newProduct.isCertified = false;
 
-        // Add product ID to the list of products
-        productIds.push(_id);
+    // Add product ID to the list of products
+    productIds.push(_id);
 
-        // Emit event to log the product addition
-        emit ProductAdded(
-            _id,
-            _name,
-            _price,
-            _manufacturerName,
-            _manufacturerDetails,
-            _longitude,
-            _latitude,
-            _category
-        );
-    }
+    // Emit event to log the product addition
+    emit ProductAdded(
+        _id,
+        _name,
+        _price,
+        _manufacturerName,
+        _manufacturerDetails,
+        _longitude,
+        _latitude,
+        _category
+    );
+}
+
+    // Other functions remain the same as in your provided code
+    // Including certifyProduct, assignCourier, addCheckpoint, markAsDelivered, etc.
+
+
+
 
     // Function to certify a product
     function certifyProduct(
@@ -151,6 +171,32 @@ contract ProductNewTrack {
 
         // Emit event to log the assignment of the logistics partner
         emit ProductAssignedToCourier(_productId, msg.sender);
+    }
+
+    // Function to add a checkpoint for a product
+    function addCheckpoint(
+        uint256 _productId,
+        string memory _location,
+        uint256 _checkInTime,
+        uint256 _checkOutTime
+    ) public {
+        // Ensure the product exists
+        require(products[_productId].id != 0, "Product does not exist.");
+
+        // Ensure the caller is the logistics partner for this product
+        require(products[_productId].logisticsPartner == msg.sender, "Only the assigned logistics partner can add checkpoints.");
+
+        // Add the checkpoint to the product
+        products[_productId].checkpoints.push(
+            Checkpoint({
+                location: _location,
+                checkInTime: _checkInTime,
+                checkOutTime: _checkOutTime
+            })
+        );
+
+        // Emit event to log the checkpoint addition
+        emit CheckpointAdded(_productId, _location, _checkInTime, _checkOutTime);
     }
 
     // Function for logistics partner to mark the product as delivered
@@ -202,4 +248,31 @@ contract ProductNewTrack {
     function getAllProductIds() public view returns (uint256[] memory) {
         return productIds;
     }
+
+    // Function to get all checkpoints for a specific product
+function getCheckpoints(uint256 _productId) public view returns (
+    string[] memory locations,
+    uint256[] memory checkInTimes,
+    uint256[] memory checkOutTimes
+) {
+    // Ensure the product exists
+    require(products[_productId].id != 0, "Product does not exist.");
+
+    // Get the number of checkpoints
+    uint256 checkpointCount = products[_productId].checkpoints.length;
+
+    // Initialize arrays to hold checkpoint data
+    locations = new string[](checkpointCount);
+    checkInTimes = new uint256[](checkpointCount);
+    checkOutTimes = new uint256[](checkpointCount);
+
+    // Populate the arrays with checkpoint data
+    for (uint256 i = 0; i < checkpointCount; i++) {
+        Checkpoint memory checkpoint = products[_productId].checkpoints[i];
+        locations[i] = checkpoint.location;
+        checkInTimes[i] = checkpoint.checkInTime;
+        checkOutTimes[i] = checkpoint.checkOutTime;
+    }
+}
+
 }
