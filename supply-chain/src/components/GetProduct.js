@@ -11,6 +11,10 @@ import {
   Card,
   CardContent,
   Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -21,6 +25,7 @@ const GetProduct = () => {
   const [productId, setProductId] = useState(1);
   const [product, setProduct] = useState(null);
   const [courierAddress, setCourierAddress] = useState(null);
+  const [checkpoints, setCheckpoints] = useState([]); // New state to store checkpoints
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -41,7 +46,7 @@ const GetProduct = () => {
     initializeWeb3();
   }, []);
 
-  // Function to fetch product details and the courier assigned
+  // Fetch product details and checkpoints
   const getProduct = async () => {
     if (!contract) {
       console.error("Contract not initialized.");
@@ -54,6 +59,13 @@ const GetProduct = () => {
       // Fetch product details
       const productDetails = await contract.methods.getProduct(productId).call();
       setProduct(productDetails);
+
+      // Extract checkpoints and format them
+      const productCheckpoints = productDetails.checkpoints || [];
+      const formattedCheckpoints = productCheckpoints.map((checkpoint) => ({
+        location: checkpoint.location,
+      }));
+      setCheckpoints(formattedCheckpoints);
 
       // Fetch courier address for the product
       const courier = await contract.methods.getCourierForProduct(productId).call();
@@ -174,6 +186,26 @@ const GetProduct = () => {
             ) : (
               <Typography>No courier assigned yet.</Typography>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Display Checkpoints */}
+      {checkpoints.length > 0 && (
+        <Card style={{ marginTop: "20px" }}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom>
+              Checkpoints:
+            </Typography>
+            <Table>
+              <TableBody>
+                {checkpoints.map((checkpoint, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{checkpoint.location}</TableCell> {/* Display location */}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
