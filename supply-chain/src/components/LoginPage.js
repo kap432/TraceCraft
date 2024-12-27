@@ -56,9 +56,10 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
 
         // Automatically set wallet address based on role
         let roleWalletMap = {
-          "Manufacturer": accounts[0],
-          "Courier": accounts[1],
+          Manufacturer: accounts[0],
+          Courier: accounts[1],
           "Certification Authority": accounts[2],
+          Customer: accounts[3], // Assuming Customers use the first account
         };
         const assignedWallet = roleWalletMap[userData.role];
 
@@ -76,6 +77,9 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
         } else if (userData.role === "Certification Authority") {
           setIsAuthenticated(true);
           navigate("/certificate-authority");
+        } else if (userData.role === "Customer") {
+          setIsAuthenticated(true);
+          navigate("/get-Product");
         } else {
           setError("Invalid role. Please contact support.");
         }

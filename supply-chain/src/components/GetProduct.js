@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import Web3 from "web3";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import {
   Container,
@@ -15,16 +15,39 @@ import {
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { contractABI, contractAddress } from "../config/contractConfig"; // Ensure correct import path
 
-const GetProduct = ({ contract }) => {
+const GetProduct = () => {
   const [productId, setProductId] = useState(1);
   const [product, setProduct] = useState(null);
   const [courierAddress, setCourierAddress] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [contract, setContract] = useState(null);
+
+  // Initialize Web3 and contract
+  useEffect(() => {
+    const initializeWeb3 = async () => {
+      if (window.ethereum) {
+        const web3 = new Web3(window.ethereum);
+        const contractInstance = new web3.eth.Contract(contractABI, contractAddress);
+        setContract(contractInstance);
+      } else {
+        console.error("MetaMask is not installed.");
+      }
+    };
+
+    initializeWeb3();
+  }, []);
+
   // Function to fetch product details and the courier assigned
   const getProduct = async () => {
+    if (!contract) {
+      console.error("Contract not initialized.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -74,13 +97,11 @@ const GetProduct = ({ contract }) => {
 
   // Set marker icon for Leaflet
   const markerIcon = new L.Icon({
-    iconUrl:
-      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
-    shadowUrl:
-      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
     shadowSize: [41, 41],
   });
 
