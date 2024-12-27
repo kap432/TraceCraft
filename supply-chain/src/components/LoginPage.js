@@ -20,21 +20,6 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const connectToMetaMask = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        setWalletAddresses(accounts);
-      } catch (err) {
-        setError("MetaMask connection failed. Please try again.");
-      }
-    } else {
-      setError("MetaMask is not installed. Please install it to proceed.");
-    }
-  };
-
   const updateWalletAddressInFirestore = async (user, newWalletAddress) => {
     try {
       const userDocRef = doc(db, "users", user.uid);
@@ -50,6 +35,18 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      // Connect to MetaMask
+      if (!window.ethereum) {
+        setError("MetaMask is not installed. Please install it to proceed.");
+        setLoading(false);
+        return;
+      }
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      setWalletAddresses(accounts);
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -59,9 +56,9 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
 
         // Automatically set wallet address based on role
         let roleWalletMap = {
-          "Manufacturer": walletAddresses[0],
-          "Courier": walletAddresses[1],
-          "Certification Authority": walletAddresses[2],
+          "Manufacturer": accounts[0],
+          "Courier": accounts[1],
+          "Certification Authority": accounts[2],
         };
         const assignedWallet = roleWalletMap[userData.role];
 
@@ -133,19 +130,11 @@ const LoginPage = ({ setIsAuthenticated, setStep }) => {
           required
         />
         <Button
-          variant="contained"
-          color="primary"
-          onClick={connectToMetaMask}
-          fullWidth
-        >
-          {walletAddresses.length > 0 ? "MetaMask Connected" : "Connect MetaMask"}
-        </Button>
-        <Button
           type="submit"
           variant="contained"
           color="primary"
           fullWidth
-          disabled={loading || walletAddresses.length === 0}
+          disabled={loading}
         >
           {loading ? "Logging In..." : "Login"}
         </Button>
