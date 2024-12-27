@@ -106,6 +106,7 @@ const SignupPage = ({ setStep }) => {
             <MenuItem value="Manufacturer">Manufacturer</MenuItem>
             <MenuItem value="Courier">Courier</MenuItem>
             <MenuItem value="Certification Authority">Certification Authority</MenuItem>
+            <MenuItem value="Customer">Customer</MenuItem> {/* Added Customer role */}
           </Select>
         </FormControl>
         <Button

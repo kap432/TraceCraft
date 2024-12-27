@@ -26773,10 +26773,22 @@
       "links": {},
       "address": "0x439e0A14bdB2Be78119939CB825f5DAf11234b76",
       "transactionHash": "0x32980e3e0573af83ccc104fe4de1d0bc7cd2b08b46afc7206445b35b3905b496"
+    },
+    "1735289325261": {
+      "events": {},
+      "links": {},
+      "address": "0x3aabcd56e250a1279A087AcB69b195d72633C88e",
+      "transactionHash": "0xb032d0e62ecf0b01a34a18a1f77aa23564abb92c823c833607ca5889507732b0"
+    },
+    "1735307467617": {
+      "events": {},
+      "links": {},
+      "address": "0xAd6DA331C32D645668BF2B6C9E55Cb6031BeE6F8",
+      "transactionHash": "0xe19312a19cb74da0fb7fc3180715c8679672bf967ce836972dd6dd40538994e0"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2024-12-27T07:47:00.338Z",
+  "updatedAt": "2024-12-27T13:52:19.983Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

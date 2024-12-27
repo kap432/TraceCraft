@@ -136,6 +136,16 @@ const App = () => {
             </>
           )}
 
+          {/* Certificate Customer Dashboard and Features */}
+          {isAuthenticated && userRole === "Customer" && (
+            <>
+              <Route
+                path="/get-Product"
+                element={<GetProduct contract={contract} account={certificateAuthorityAccount} />}
+              />
+            </>
+          )}
+
           {/* Common Features */}
           {isAuthenticated && (
             <Route
