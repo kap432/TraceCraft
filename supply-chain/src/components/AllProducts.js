@@ -13,6 +13,8 @@ import {
   CircularProgress,
   Alert,
   Button,
+  Collapse,
+  Box,
 } from "@mui/material";
 import { contractAddress, contractABI } from "../config/contractConfig";
 
@@ -20,6 +22,7 @@ const AllProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedRow, setExpandedRow] = useState(null); // To track expanded rows
 
   const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
   const contract = new web3.eth.Contract(contractABI, contractAddress);
@@ -33,6 +36,7 @@ const AllProducts = () => {
 
       for (const id of productIds) {
         const productDetails = await contract.methods.getProduct(id).call();
+        const checkpointCount = productDetails.checkpoints.length; // Count checkpoints
         productsList.push({
           id: productDetails.id,
           name: productDetails.name,
@@ -42,6 +46,8 @@ const AllProducts = () => {
           certificateHash: productDetails.certificateDocHash,
           courier: productDetails.logisticsPartner,
           status: productDetails.deliveryStatus,
+          checkpoints: productDetails.checkpoints,
+          checkpointCount, // Add checkpoint count
         });
       }
 
@@ -56,6 +62,10 @@ const AllProducts = () => {
   useEffect(() => {
     getAllProducts();
   }, []);
+
+  const toggleRow = (rowIndex) => {
+    setExpandedRow(expandedRow === rowIndex ? null : rowIndex);
+  };
 
   return (
     <Container maxWidth="lg" style={{ marginTop: "20px" }}>
@@ -85,32 +95,76 @@ const AllProducts = () => {
                 <TableCell><strong>Price</strong></TableCell>
                 <TableCell><strong>Manufacturer</strong></TableCell>
                 <TableCell><strong>Category</strong></TableCell>
-                <TableCell><strong>Certificate Hash</strong></TableCell>
+                {/* <TableCell><strong>Certificate Hash</strong></TableCell> */}
                 <TableCell><strong>Courier Address</strong></TableCell>
                 <TableCell><strong>Delivery Status</strong></TableCell>
+                <TableCell><strong>Checkpoints Count</strong></TableCell>
+                <TableCell><strong>Actions</strong></TableCell>
                 <TableCell><strong>View</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {products.map((product, index) => (
-                <TableRow key={index}>
-                  <TableCell>{product.id}</TableCell>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.price}</TableCell>
-                  <TableCell>{product.manufacturer}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>
-                    {product.certificateHash || "No certificate available"}
-                  </TableCell>
-                  <TableCell>
-                    {product.courier !== "0x0000000000000000000000000000000000000000"
-                      ? product.courier
-                      : "No courier assigned"}
-                  </TableCell>
-                  <TableCell>
-                    {product.status || "No status available"}
-                  </TableCell>
-                  <TableCell>
+                <React.Fragment key={index}>
+                  <TableRow>
+                    <TableCell>{product.id}</TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>{product.price}</TableCell>
+                    <TableCell>{product.manufacturer}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    {/* <TableCell>
+                      {product.certificateHash || "No certificate available"}
+                    </TableCell> */}
+                    <TableCell>
+                      {product.courier !== "0x0000000000000000000000000000000000000000"
+                        ? product.courier
+                        : "No courier assigned"}
+                    </TableCell>
+                    <TableCell>
+                      {product.status || "No status available"}
+                    </TableCell>
+                    <TableCell>{product.checkpointCount}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => toggleRow(index)}
+                      >
+                        {expandedRow === index ? "Hide Checkpoints" : "Show Checkpoints"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell colSpan={10}>
+                      <Collapse in={expandedRow === index}>
+                        <Box margin={2}>
+                          <Typography variant="h6">Checkpoints</Typography>
+                          {product.checkpoints.length > 0 ? (
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Location</TableCell>
+                                  <TableCell>Check-In Time</TableCell>
+                                  <TableCell>Check-Out Time</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {product.checkpoints.map((checkpoint, i) => (
+                                  <TableRow key={i}>
+                                    <TableCell>{checkpoint.location}</TableCell>
+                                    <TableCell>{new Date(checkpoint.checkInTime * 1000).toLocaleString()}</TableCell>
+                                    <TableCell>{new Date(checkpoint.checkOutTime * 1000).toLocaleString()}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          ) : (
+                            <Typography>No checkpoints available</Typography>
+                          )}
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                    <TableCell>
                     {product.certificateHash ? (
                       <Button
                         variant="contained"
@@ -123,7 +177,8 @@ const AllProducts = () => {
                       "No certificate available"
                     )}
                   </TableCell>
-                </TableRow>
+                  </TableRow>
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>
