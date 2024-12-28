@@ -65,7 +65,7 @@ const CertificateAuthority = () => {
   const signCertificateDetails = async () => {
     try {
       const message = `Product ID: ${productId}\nCertificate Provider: ${certificateProvider}`;
-      const privateKey = "0x98d6ab882944192bb92e9bcf269938fcadce9c674b3c1c95d22ea35375e88d8b"; // Replace with the actual private key (store securely).
+      const privateKey = "0x90a4b75433bc2ac37908fee028c56e3fa745d120c52c58af41d98018a4cc909e"; // Replace with the actual private key (store securely).
       const signature = web3.eth.accounts.sign(message, privateKey);
       setDigitalSignature(signature.signature);
     } catch (error) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract ProductTrac {
+contract ProductTr {
     // Define a struct for the Product
     struct Product {
         uint256 id;
@@ -26,6 +26,8 @@ contract ProductTrac {
     // Define a struct for the Checkpoints
     struct Checkpoint {
         string location;
+        string longitude;
+        string latitude;
         uint256 checkInTime;
         uint256 checkOutTime;
     }
@@ -73,6 +75,8 @@ contract ProductTrac {
     event CheckpointAdded(
         uint256 productId,
         string location,
+        string longitude,
+        string latitude,
         uint256 checkInTime,
         uint256 checkOutTime
     );
@@ -126,12 +130,6 @@ contract ProductTrac {
     );
 }
 
-    // Other functions remain the same as in your provided code
-    // Including certifyProduct, assignCourier, addCheckpoint, markAsDelivered, etc.
-
-
-
-
     // Function to certify a product
     function certifyProduct(
         uint256 _productId,
@@ -177,6 +175,8 @@ contract ProductTrac {
     function addCheckpoint(
         uint256 _productId,
         string memory _location,
+        string memory _longitude,
+        string memory _latitude,
         uint256 _checkInTime,
         uint256 _checkOutTime
     ) public {
@@ -190,13 +190,15 @@ contract ProductTrac {
         products[_productId].checkpoints.push(
             Checkpoint({
                 location: _location,
+                longitude: _longitude,
+                latitude: _latitude,
                 checkInTime: _checkInTime,
                 checkOutTime: _checkOutTime
             })
         );
 
         // Emit event to log the checkpoint addition
-        emit CheckpointAdded(_productId, _location, _checkInTime, _checkOutTime);
+        emit CheckpointAdded(_productId, _location, _longitude, _latitude, _checkInTime, _checkOutTime);
     }
 
     // Function for logistics partner to mark the product as delivered
@@ -252,6 +254,8 @@ contract ProductTrac {
     // Function to get all checkpoints for a specific product
 function getCheckpoints(uint256 _productId) public view returns (
     string[] memory locations,
+    string[] memory longitudes,
+    string[] memory latitudes,
     uint256[] memory checkInTimes,
     uint256[] memory checkOutTimes
 ) {
@@ -263,6 +267,8 @@ function getCheckpoints(uint256 _productId) public view returns (
 
     // Initialize arrays to hold checkpoint data
     locations = new string[](checkpointCount);
+    longitudes = new string[](checkpointCount);
+    latitudes = new string[](checkpointCount);
     checkInTimes = new uint256[](checkpointCount);
     checkOutTimes = new uint256[](checkpointCount);
 
@@ -270,6 +276,8 @@ function getCheckpoints(uint256 _productId) public view returns (
     for (uint256 i = 0; i < checkpointCount; i++) {
         Checkpoint memory checkpoint = products[_productId].checkpoints[i];
         locations[i] = checkpoint.location;
+        longitudes[i] = checkpoint.longitude;
+        latitudes[i] = checkpoint.latitude;
         checkInTimes[i] = checkpoint.checkInTime;
         checkOutTimes[i] = checkpoint.checkOutTime;
     }

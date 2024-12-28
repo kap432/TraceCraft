@@ -1,6 +1,6 @@
-const ProductTrac = artifacts.require("ProductTrac");
+const ProductTr = artifacts.require("ProductTr");
 
 module.exports = function (deployer) {
   // Deploy the ProductNewTrack contract
-  deployer.deploy(ProductTrac);
+  deployer.deploy(ProductTr);
 };
