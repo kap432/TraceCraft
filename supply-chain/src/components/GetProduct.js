@@ -14,21 +14,19 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableRow
+  TableRow,
 } from "@mui/material";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { contractABI, contractAddress } from "../config/contractConfig"; // Ensure correct import path
+import { contractABI, contractAddress } from "../config/contractConfig";
 
 const GetProduct = () => {
   const [productId, setProductId] = useState(1);
   const [product, setProduct] = useState(null);
-  const [courierAddress, setCourierAddress] = useState(null);
-  const [checkpoints, setCheckpoints] = useState([]); // New state to store checkpoints
+  const [checkpoints, setCheckpoints] = useState([]); // Checkpoints with coordinates
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [contract, setContract] = useState(null);
 
   // Initialize Web3 and contract
@@ -60,17 +58,14 @@ const GetProduct = () => {
       const productDetails = await contract.methods.getProduct(productId).call();
       setProduct(productDetails);
 
-      // Extract checkpoints and format them
+      // Extract and format checkpoints
       const productCheckpoints = productDetails.checkpoints || [];
       const formattedCheckpoints = productCheckpoints.map((checkpoint) => ({
         location: checkpoint.location,
+        latitude: parseFloat(checkpoint.latitude),
+        longitude: parseFloat(checkpoint.longitude),
       }));
       setCheckpoints(formattedCheckpoints);
-
-      // Fetch courier address for the product
-      const courier = await contract.methods.getCourierForProduct(productId).call();
-      const cleanedCourier = courier.trim();
-      setCourierAddress(cleanedCourier);
     } catch (error) {
       console.error("Error retrieving product:", error);
     }
@@ -177,15 +172,6 @@ const GetProduct = () => {
             <Typography>Longitude: {product[5]}</Typography>
             <Typography>Latitude: {product[6]}</Typography>
             <Typography>Category: {product[7]}</Typography>
-
-            <Divider style={{ margin: "15px 0" }} />
-            {courierAddress && courierAddress !== "" ? (
-              <Typography>
-                <strong>Courier Address:</strong> {courierAddress}
-              </Typography>
-            ) : (
-              <Typography>No courier assigned yet.</Typography>
-            )}
           </CardContent>
         </Card>
       )}
@@ -201,7 +187,10 @@ const GetProduct = () => {
               <TableBody>
                 {checkpoints.map((checkpoint, index) => (
                   <TableRow key={index}>
-                    <TableCell>{checkpoint.location}</TableCell> {/* Display location */}
+                    <TableCell>{checkpoint.location}</TableCell>
+                    <TableCell>
+                      Latitude: {checkpoint.longitude}, Longitude: {checkpoint.latitude}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -211,28 +200,55 @@ const GetProduct = () => {
       )}
 
       {/* Map Integration */}
-      {product && product[5] && product[6] && (
-        <Box style={{ height: "400px", marginTop: "20px" }}>
-          <MapContainer
-            center={[parseFloat(product[6]), parseFloat(product[5])]}
-            zoom={13}
-            style={{ height: "400px", width: "100%" }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
+      <Box style={{ height: "400px", marginTop: "20px" }}>
+        <MapContainer
+          center={[parseFloat(product?.latitude || 0), parseFloat(product?.longitude || 0)]}
+          zoom={13}
+          style={{ height: "400px", width: "100%" }}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {/* Product marker */}
+          {product && product[5] && product[6] && (
             <Marker
               position={[parseFloat(product[6]), parseFloat(product[5])]}
               icon={markerIcon}
             >
               <Popup>
-                {product[1]} - {product[7]}
+                <Typography variant="subtitle1" gutterBottom>
+                  Product Origin
+                </Typography>
+                <Typography variant="body2">Name: {product[1]}</Typography>
+                <Typography variant="body2">Latitude: {product[6]}</Typography>
+                <Typography variant="body2">Longitude: {product[5]}</Typography>
               </Popup>
             </Marker>
-          </MapContainer>
-        </Box>
-      )}
+          )}
+          {/* Checkpoint markers */}
+{checkpoints.map((checkpoint, index) => {
+  console.log(`Checkpoint ${index}:`, checkpoint); // Debugging: Log checkpoint data
+  return (
+    <Marker
+      key={index}
+      position={[checkpoint.longitude, checkpoint.latitude]}
+      icon={markerIcon}
+    >
+      <Popup>
+        <Typography variant="subtitle1" gutterBottom>
+          Checkpoint {index + 1}
+        </Typography>
+        <Typography variant="body2">Location: {checkpoint.location}</Typography>
+        <Typography variant="body2">Latitude: {checkpoint.latitude}</Typography>
+        <Typography variant="body2">Longitude: {checkpoint.longitude}</Typography>
+      </Popup>
+    </Marker>
+  );
+})}
+
+        </MapContainer>
+      </Box>
     </Container>
   );
 };

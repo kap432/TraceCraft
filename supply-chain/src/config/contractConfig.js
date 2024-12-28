@@ -1,4 +1,4 @@
-const contractAddress = "0xAd6DA331C32D645668BF2B6C9E55Cb6031BeE6F8";
+const contractAddress = "0x04D0475bcF6839f16e9e2E6B73b4e9eB0A51a5E9";
 
 const contractABI = [
   {
@@ -14,6 +14,18 @@ const contractABI = [
         "indexed": false,
         "internalType": "string",
         "name": "location",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "longitude",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "latitude",
         "type": "string"
       },
       {
@@ -277,6 +289,16 @@ const contractABI = [
         "type": "string"
       },
       {
+        "internalType": "string",
+        "name": "_longitude",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_latitude",
+        "type": "string"
+      },
+      {
         "internalType": "uint256",
         "name": "_checkInTime",
         "type": "uint256"
@@ -428,6 +450,16 @@ const contractABI = [
                 "type": "string"
               },
               {
+                "internalType": "string",
+                "name": "longitude",
+                "type": "string"
+              },
+              {
+                "internalType": "string",
+                "name": "latitude",
+                "type": "string"
+              },
+              {
                 "internalType": "uint256",
                 "name": "checkInTime",
                 "type": "uint256"
@@ -438,12 +470,12 @@ const contractABI = [
                 "type": "uint256"
               }
             ],
-            "internalType": "struct ProductTrac.Checkpoint[]",
+            "internalType": "struct ProductTr.Checkpoint[]",
             "name": "checkpoints",
             "type": "tuple[]"
           }
         ],
-        "internalType": "struct ProductTrac.Product",
+        "internalType": "struct ProductTr.Product",
         "name": "",
         "type": "tuple"
       }
@@ -482,6 +514,16 @@ const contractABI = [
         "type": "string[]"
       },
       {
+        "internalType": "string[]",
+        "name": "longitudes",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "latitudes",
+        "type": "string[]"
+      },
+      {
         "internalType": "uint256[]",
         "name": "checkInTimes",
         "type": "uint256[]"
@@ -496,6 +538,6 @@ const contractABI = [
     "type": "function",
     "constant": true
   }
-  ];
+];
 
   export { contractAddress, contractABI };

@@ -12,72 +12,70 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  List,
-  ListItem,
 } from "@mui/material";
 import Web3 from "web3";
-import { contractABI, contractAddress } from "../config/contractConfig";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { contractABI, contractAddress } from "../config/contractConfig"; // Ensure the correct path
+import { useNavigate } from "react-router-dom"; // React Router for navigation
 
 const CourierDashboard = () => {
   const [checkpointDetails, setCheckpointDetails] = useState({
     productId: "",
     location: "",
-    checkInTime: Date.now(),
-    checkOutTime: Date.now(),
+    latitude: "", // Auto-populated latitude
+    longitude: "", // Auto-populated longitude
+    checkInTime: Date.now(), // Set default to current timestamp
+    checkOutTime: Date.now(), // Set default to current timestamp
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState("");
 
   const [web3, setWeb3] = useState(null);
   const [contractInstance, setContractInstance] = useState(null);
-  const [account, setAccount] = useState("");
-  const navigate = useNavigate();
+  const [account, setAccount] = useState(""); // Declare account state
+  const navigate = useNavigate(); // Initialize react-router's navigate function
 
-  const GEOAPIFY_API_KEY = "e80037607d33427c84bb6d4007a1dabe"; // Replace with your Geoapify API key
+  // Automatically fetch latitude and longitude
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCheckpointDetails((prevDetails) => ({
+            ...prevDetails,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString(),
+          }));
+        },
+        (error) => {
+          console.error("Error fetching location:", error.message);
+          setError(true);
+          setMessage("Could not fetch device location. Please enable location services.");
+          setSnackbarOpen(true);
+        }
+      );
+    } else {
+      setError(true);
+      setMessage("Geolocation is not supported by this browser.");
+      setSnackbarOpen(true);
+    }
+  }, []);
 
+  // Handle changes in input fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
     setCheckpointDetails((prevDetails) => ({
       ...prevDetails,
       [name]: value,
     }));
-
-    if (name === "location" && value) {
-      fetchLocationSuggestions(value);
-    }
   };
 
-  const fetchLocationSuggestions = async (query) => {
-    try {
-      const response = await axios.get(
-        `https://api.geoapify.com/v1/geocode/autocomplete?text=${query}&apiKey=${GEOAPIFY_API_KEY}`
-      );
-      setSuggestions(response.data.features || []);
-    } catch (error) {
-      console.error("Error fetching location suggestions:", error);
-    }
-  };
-
-  const handleLocationSelect = (location) => {
-    setCheckpointDetails((prevDetails) => ({
-      ...prevDetails,
-      location: location.properties.formatted,
-    }));
-    setSelectedLocation(location.properties.formatted);
-    setSuggestions([]);
-  };
-
+  // Convert datetime string to UNIX timestamp (in seconds)
   const convertToUnixTimestamp = (datetime) => {
     return Math.floor(new Date(datetime).getTime() / 1000);
   };
 
+  // Add a checkpoint
   const handleAddCheckpoint = async () => {
     if (!contractInstance || !account) {
       setError(true);
@@ -86,13 +84,19 @@ const CourierDashboard = () => {
       return;
     }
 
-    if (!checkpointDetails.productId || !checkpointDetails.location) {
+    if (
+      !checkpointDetails.productId ||
+      !checkpointDetails.location ||
+      !checkpointDetails.latitude ||
+      !checkpointDetails.longitude
+    ) {
       setError(true);
-      setMessage("Please provide product ID and location.");
+      setMessage("Please provide all required fields.");
       setSnackbarOpen(true);
       return;
     }
 
+    // Convert check-in and check-out time to UNIX timestamps
     const checkInTimestamp = convertToUnixTimestamp(checkpointDetails.checkInTime);
     const checkOutTimestamp = convertToUnixTimestamp(checkpointDetails.checkOutTime);
 
@@ -102,6 +106,8 @@ const CourierDashboard = () => {
         .addCheckpoint(
           checkpointDetails.productId,
           checkpointDetails.location,
+          checkpointDetails.latitude,
+          checkpointDetails.longitude,
           checkInTimestamp,
           checkOutTimestamp
         )
@@ -112,10 +118,11 @@ const CourierDashboard = () => {
       setCheckpointDetails({
         productId: "",
         location: "",
+        latitude: "",
+        longitude: "",
         checkInTime: Date.now(),
         checkOutTime: Date.now(),
       });
-      setSelectedLocation("");
     } catch (err) {
       console.error(err);
       setError(true);
@@ -126,10 +133,12 @@ const CourierDashboard = () => {
     }
   };
 
+  // Close Snackbar
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
   };
 
+  // Initialize Web3 and Contract
   useEffect(() => {
     if (window.ethereum) {
       const initializeWeb3 = async () => {
@@ -138,7 +147,7 @@ const CourierDashboard = () => {
 
         const accounts = await web3Instance.eth.getAccounts();
         if (accounts.length > 0) {
-          setAccount(accounts[0]);
+          setAccount(accounts[0]); // Set the account after fetching
         }
 
         const contractInstance = new web3Instance.eth.Contract(
@@ -157,10 +166,12 @@ const CourierDashboard = () => {
     }
   }, []);
 
+  // Navigate to the assign courier page
   const handleAssignCourier = () => {
     navigate("/assign-courier");
   };
 
+  // Navigate to the all products page
   const handleViewAllProducts = () => {
     navigate("/all-products");
   };
@@ -244,19 +255,24 @@ const CourierDashboard = () => {
                 fullWidth
                 sx={{ mb: 2 }}
               />
-              {suggestions.length > 0 && (
-                <List>
-                  {suggestions.map((suggestion, index) => (
-                    <ListItem
-                      key={index}
-                      button
-                      onClick={() => handleLocationSelect(suggestion)}
-                    >
-                      {suggestion.properties.formatted}
-                    </ListItem>
-                  ))}
-                </List>
-              )}
+              <TextField
+                label="Latitude"
+                variant="outlined"
+                name="latitude"
+                value={checkpointDetails.latitude}
+                onChange={handleInputChange}
+                fullWidth
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                label="Longitude"
+                variant="outlined"
+                name="longitude"
+                value={checkpointDetails.longitude}
+                onChange={handleInputChange}
+                fullWidth
+                sx={{ mb: 2 }}
+              />
               <TextField
                 label="Check-in Time"
                 variant="outlined"
